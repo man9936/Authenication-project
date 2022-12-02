@@ -1,11 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
+import { useHistory } from "react-router-dom";
 
+import AuthContext from "../../store/auth-context";
 import classes from "./AuthForm.module.css";
 
 const AuthForm = () => {
+  const history = useHistory();
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
-  const InputRef = useRef();
+
+  const authCtx = useContext(AuthContext);
 
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -19,15 +23,17 @@ const AuthForm = () => {
 
     const enteredEmail = emailInputRef.current.value;
     const enteredPassword = passwordInputRef.current.value;
-    setIsLoading(true);
 
+    // optional: Add validation
+
+    setIsLoading(true);
     let url;
     if (isLogin) {
       url =
-        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyC6fDnhYOxjGbDuLGTyrDReR3nx4F7TUD0";
+        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyC6fDnhYOxjGbDuLGTyrDReR3nx4F7TUD0";
     } else {
       url =
-        "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyC6fDnhYOxjGbDuLGTyrDReR3nx4F7TUD0";
+        "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyC6fDnhYOxjGbDuLGTyrDReR3nx4F7TUD0";
     }
     fetch(url, {
       method: "POST",
@@ -45,9 +51,9 @@ const AuthForm = () => {
         if (res.ok) {
           return res.json();
         } else {
-          res.json().then((data) => {
-            let errorMessage = "Authentication Failed!";
-            // if (data & data.error.message) {
+          return res.json().then((data) => {
+            let errorMessage = "Authentication failed!";
+            // if (data && data.error && data.error.message) {
             //   errorMessage = data.error.message;
             // }
 
@@ -56,10 +62,11 @@ const AuthForm = () => {
         }
       })
       .then((data) => {
-        console.log(data);
+        authCtx.login(data.idToken);
+        history.replace("/");
       })
       .catch((err) => {
-        alert(err.Message);
+        alert(err.message);
       });
   };
 
@@ -100,95 +107,5 @@ const AuthForm = () => {
 
 export default AuthForm;
 
-// import { useRef, useState } from "react";
-// import classes from "./AuthForm.module.css";
-// const AuthForm = () => {
-//   const emailRef = useRef();
-//   const passRef = useRef();
-//   const [isLogin, setIsLogin] = useState(true);
-//   const [isLoading, setLoading] = useState(false);
-//   const switchAuthModeHandler = () => {
-//     setIsLogin((prevState) => !prevState);
-//   };
-//   const submihandler = (e) => {
-//     e.preventDefault();
-//     if (!isLogin) {
-//       setLoading(true);
-//       fetch(
-//         "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyC6fDnhYOxjGbDuLGTyrDReR3nx4F7TUD0",
-//         {
-//           method: "POST",
-//           body: JSON.stringify({
-//             email: emailRef.current.value,
-//             password: passRef.current.value,
-//             returnSecureToken: true,
-//           }),
-//           headers: {
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       )
-//         .then((res) => {
-//           if (res.ok) {
-//           } else {
-//             res.json().then((data) => alert(data.error.message));
-//           }
-//         })
-//         .catch((e) => console.log(e));
-//       setLoading(false);
-//     } else {
-//       setLoading(true);
-//       fetch(
-//         "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyC6fDnhYOxjGbDuLGTyrDReR3nx4F7TUD0",
-//         {
-//           method: "POST",
-//           body: JSON.stringify({
-//             email: emailRef.current.value,
-//             password: passRef.current.value,
-//             returnSecureToken: true,
-//           }),
-//           headers: {
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       )
-//         .then((res) => {
-//           if (res.ok) {
-//             res.json().then((data) => console.log(data.idToken));
-//           } else {
-//             res.json().then((data) => alert(data.error.message));
-//           }
-//         })
-//         .catch((e) => console.log(e));
-//     }
-//     setLoading(false);
-//   };
-//   //
-//   return (
-//     <section className={classes.auth}>
-//       <h1>{isLogin ? "Login" : "Sign Up"}</h1>
-//       <form onSubmit={submihandler}>
-//         <div className={classes.control}>
-//           <label htmlFor="email">Your Email</label>
-//           <input ref={emailRef} type="email" id="email" required />
-//         </div>
-//         <div className={classes.control}>
-//           <label htmlFor="password">Your Password</label>
-//           <input ref={passRef} type="password" id="password" required />
-//         </div>
-//         <div className={classes.actions}>
-//           {isLoading && <h3>Sending request...</h3>}
-//           <button>{isLogin ? "Login" : "Create Account"}</button>
-//           <button
-//             type="button"
-//             className={classes.toggle}
-//             onClick={switchAuthModeHandler}
-//           >
-//             {isLogin ? "Create new account" : "Login with existing account"}
-//           </button>
-//         </div>
-//       </form>
-//     </section>
-//   );
-// };
-// export default AuthForm;
+// "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyC6fDnhYOxjGbDuLGTyrDReR3nx4F7TUD0";
+// "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyC6fDnhYOxjGbDuLGTyrDReR3nx4F7TUD0";
